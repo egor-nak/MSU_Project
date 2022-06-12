@@ -1,7 +1,7 @@
 #define EN_PIN    38  // LOW: Driver enabled. HIGH: Driver disabled
 #define STEP_PIN  54  // Step on rising edge
 #define DIR_PIN 55
-
+#define X_MIN 2
 
 #include <TMC2208Stepper.h> // Include library
 #include <Servo.h>
@@ -12,18 +12,21 @@ Servo myservo;
 uint32_t last_time = 0;
 bool dir = true;
 double pos = 0;
+bool go_down = true;
+int counter = 0;
 
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(250000);
   Serial.println("Start...");
-  Serial1.begin(115200);        // Start hardware serial 1
+  Serial1.begin(250000);        // Start hardware serial 1
   driver.push();                // Reset registers
 
   // Prepare pins
   pinMode(EN_PIN, OUTPUT);
   pinMode(STEP_PIN, OUTPUT);
   pinMode(DIR_PIN, OUTPUT);
+  pinMode(X_MIN, OUTPUT);
   digitalWrite(EN_PIN, HIGH);   // Disable driver in hardware
 
   driver.pdn_disable(true);     // Use PDN/UART pin for communication
@@ -39,9 +42,27 @@ void setup() {
   driver.DRV_STATUS(&data);
   Serial.println(data, HEX);
   myservo.attach(11);
+  attachInterrupt(0, myEventListener, CHANGE);
 }
 
 void loop() {
+  if (counter == 0) {
+    digitalWrite(DIR_PIN, HIGH);
+    dir = false;
+    digitalWrite(STEP_PIN, HIGH);
+    delay(1);                     // Мотор работает только когда мы включаем и выключаем пины
+    digitalWrite(STEP_PIN, LOW);
+    delay(1);
+    Serial.println("DOWN");
+  } else {
+    Serial.println("NNNNNNNDOWN");
+    digitalWrite(DIR_PIN, LOW);
+    dir = true;
+    run_fc();
+  }
+}
+
+void run_fc() {
   for (pos = 0; pos <= 180.0; pos += 3.6) {
     myservo.write(pos);
     delay(1000);
@@ -82,4 +103,11 @@ void loop() {
       }
     }
   }
+}
+
+
+void myEventListener() {
+  go_down = false;
+  counter++;
+  Serial.println("Done");
 }
