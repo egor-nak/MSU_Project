@@ -7,10 +7,11 @@
 
 
 // Помечаем нужные пины
-#define EN_PIN    38  // LOW: Driver enabled. HIGH: Driver disabled
+#define EN_PIN    38  // LOW:Driver enabled. HIGH: Driver disabled
 #define STEP_PIN  54  // Step on rising edge
 #define DIR_PIN 55
 #define X_MIN 2
+#define LIGHT_PIN 40
 
 bool button_was_pushed = false;
 bool direct = false; // true - наверх, false - вниз
@@ -65,11 +66,16 @@ void setup() {
 
   // Настройка АЦП
   sensor.tare();
+
+
+  // Светодиод
+  pinMode(LIGHT_PIN, OUTPUT);
+  digitalWrite(LIGHT_PIN, LOW);
 }
 
 
 void loop() {
-  
+  digitalWrite(LIGHT_PIN, LOW);
   for (int pos = 0; pos <= 180; pos += 3.6) { //серва куртится по часовой
      myservo.write(pos);
      delay(1000);
@@ -80,6 +86,7 @@ void loop() {
   for (int pos = 180; pos >= 0; pos -= 3.6) { //серва куртится против часовой
      myservo.write(pos);
      delay(1000);
+     digitalWrite(LIGHT_PIN, LOW);
      go_up_until_end();
      go_down_until_end();
   }
@@ -113,7 +120,6 @@ void go_down_until_end() {
 
 
 void go_up_until_end() {
-  
   digitalWrite(DIR_PIN, LOW); // он теперь едет вверх
   direct = true;
   
@@ -121,15 +127,21 @@ void go_up_until_end() {
   if (sensor.available()) {
       prev = sensor.read();
   }
-  Serial.println(sensor.read());
+//  Serial.println(sensor.read());
   while (sensor.read() <= 800000) { // едем вверх пока не изменится давление
     digitalWrite(STEP_PIN, HIGH);
     delay(1);
     digitalWrite(STEP_PIN, LOW);
     delay(1);
     prev = sensor.read();
-    Serial.println(sensor.read());
+//    Serial.println(sensor.read());
   }
+  digitalWrite(LIGHT_PIN, HIGH);
+  Serial.println("HIGH");
+  delay(1000);
+  digitalWrite(LIGHT_PIN, LOW);
+  Serial.println("LOW");
+  delay(1000);
 }
 
 void myEventListener() {
