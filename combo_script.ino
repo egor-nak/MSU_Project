@@ -16,6 +16,9 @@
 bool button_was_pushed = false;
 bool direct = false; // true - наверх, false - вниз
 
+bool servo_direct = false; // true - по часовой, false - против
+double servo_pos = 0.0;
+
 
 // обозначаем используемые элементы
 TMC2208Stepper driver = TMC2208Stepper(&Serial1);
@@ -26,12 +29,17 @@ GyverHX711 sensor(21, 20, HX_GAIN32_B);
 // HX_GAIN64_A - канал А усиление 64
 
 void go_down_until_end();
+void go_up_until_end();
+void servo_movement(int point);
+void blink_lighter();
+
 
 void setup() {
 
   // Обозначаем порты вывода
   Serial.begin(250000);
-  Serial1.begin(250000);
+//  Serial1.begin(250000);
+//  Serial.setTimeout(1);
   
   driver.push();
 
@@ -58,10 +66,11 @@ void setup() {
 
   // Настройка сервы
   myservo.attach(11);
+  myservo.write(0);
 
 
   // Настройка концевика
-  attachInterrupt(0, myEventListener, CHANGE);
+  attachInterrupt(0, myEventListener, RISING);
 
 
   // Настройка АЦП
@@ -71,26 +80,26 @@ void setup() {
   // Светодиод
   pinMode(LIGHT_PIN, OUTPUT);
   digitalWrite(LIGHT_PIN, LOW);
+
+  
+ 
 }
 
 
 void loop() {
-  digitalWrite(LIGHT_PIN, LOW);
-  for (int pos = 0; pos <= 180; pos += 3.6) { //серва куртится по часовой
-     myservo.write(pos);
-     delay(1000);
-     go_up_until_end();
-     go_down_until_end();
-  }
+  while (!Serial.available());
+  int place_to_go = Serial.readString().toInt();
+//  Serial.print(3 * place_to_go);
+//  blink_lighter();
+  servo_movement(place_to_go);
+  go_up_until_end();
+  go_down_until_end();
+}
 
-  for (int pos = 180; pos >= 0; pos -= 3.6) { //серва куртится против часовой
-     myservo.write(pos);
-     delay(1000);
-     digitalWrite(LIGHT_PIN, LOW);
-     go_up_until_end();
-     go_down_until_end();
-  }
-    
+
+void servo_movement(int point) {
+  myservo.write(3 * point);
+  delay(15);
 }
 
 void go_down_until_end() {
@@ -103,11 +112,11 @@ void go_down_until_end() {
     digitalWrite(STEP_PIN, LOW);
     delay(1);
   }
-
+  button_was_pushed = false;
   digitalWrite(DIR_PIN, LOW); // он теперь едет вверх
   direct = true;
-  button_was_pushed = false;
-  for (int i = 0; i < 100; ++i) {
+  
+  for (int i = 0; i < 200; ++i) {
     digitalWrite(STEP_PIN, HIGH);
     delay(1);
     digitalWrite(STEP_PIN, LOW);
@@ -127,23 +136,24 @@ void go_up_until_end() {
   if (sensor.available()) {
       prev = sensor.read();
   }
-//  Serial.println(sensor.read());
+  delay(1000);
   while (sensor.read() <= 800000) { // едем вверх пока не изменится давление
     digitalWrite(STEP_PIN, HIGH);
     delay(1);
     digitalWrite(STEP_PIN, LOW);
     delay(1);
     prev = sensor.read();
-//    Serial.println(sensor.read());
   }
-  digitalWrite(LIGHT_PIN, HIGH);
-  Serial.println("HIGH");
-  delay(1000);
-  digitalWrite(LIGHT_PIN, LOW);
-  Serial.println("LOW");
-  delay(1000);
 }
 
 void myEventListener() {
   button_was_pushed = true;
+  blink_lighter();
+}
+
+void blink_lighter() {
+  digitalWrite(LIGHT_PIN, HIGH);
+  delay(200);
+  digitalWrite(LIGHT_PIN, LOW);
+  delay(200);
 }
