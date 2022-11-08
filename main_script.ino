@@ -98,23 +98,25 @@ void init_stepper_round() { // инициализация шаговика
 
 void stepper_round_move_once() { // одно движение шаговика
   digitalWrite(STEP_PIN_STEPPER_ROUND, !digitalRead(STEP_PIN_STEPPER_ROUND));
-  delayMicroseconds(500);
+  delayMicroseconds(3000);
 }
 
-void stepper_round_change_pin(int pins_count = 1) { // сдвинуться на n - количество пинов
+void stepper_round_change_pin(int pins_count) { // сдвинуться на n - количество пинов
   int count_interrapts = 0;
   bool prev_data_optical_sensor =  get_value_from_optical_sensor_for_count();
   while (count_interrapts < pins_count) {
-    stepper_round_move_once();
     bool ans_from_optical_sensor = get_value_from_optical_sensor_for_count();
     if (ans_from_optical_sensor && ans_from_optical_sensor != prev_data_optical_sensor) {
       count_interrapts++;
+//      Serial.println(count_interrapts);
       pin_now++;
       pin_now = pin_now % (total_count_of_pins + 1); // меняем индекс пина на котором стоит барабан
       if (pin_now == 0) pin_now++;
     }
     prev_data_optical_sensor = ans_from_optical_sensor;
+    stepper_round_move_once();
   }
+//  Serial.println("st");
 }
 
 // --------------------------- Stepper UP_DOWN -----------------------------
@@ -143,6 +145,8 @@ void stepper_up_down_move_once() { // одно движение шаговика
 
 void move_up_while_max_pressure() { // движение вверх до достижения порога давления
   double ans = get_scales_value();
+  delay(500);                       // это кастыль, чтобы ацп не брало знаение из самого себя, его не удалять!!!!!!!!!!!!!!!!!!!!
+  ans = get_scales_value();
   digitalWrite(DIR_PIN_UP_DOWN, MOVE_UP_DIR_STEPPER_UP_DOWN);
   while (ans <= max_pressure_value) {
     stepper_up_down_move_once();
@@ -152,12 +156,16 @@ void move_up_while_max_pressure() { // движение вверх до дост
 }
 
 void move_down_maximal() { // движение шаговика максимально вниз, пока он не нажмёт на концевик
+  delay(500);
   digitalWrite(DIR_PIN_UP_DOWN, MOVE_DOWN_DIR_STEPPER_UP_DOWN);
   int ans_check = end_stop_check_push();
   while (ans_check != 0) {
     stepper_up_down_move_once();
     ans_check = end_stop_check_push();
   }
+
+  digitalWrite(DIR_PIN_UP_DOWN, MOVE_UP_DIR_STEPPER_UP_DOWN);
+  
   delayMicroseconds(500);
 }
 
@@ -186,8 +194,9 @@ void setup() {
 void loop() {
   if (flag_setting_scales) { // выставление значения нуля весам
     set_up_zero_value_for_scales();
+//    stepper_round_change_pin(1);
   }
-  stepper_round_change_pin();
+  stepper_round_change_pin(1);
   stepper_up_down_press();
 //  Serial.println(end_stop_check_push());
 }
