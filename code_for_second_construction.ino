@@ -11,6 +11,8 @@
 #define MOVE_UP_DIR_STEPPER_UP_CLOCKWISE HIGH
 #define MOVE_UP_DIR_STEPPER_UP_NON_CLOCKWISE LOW
 
+#define FiveV_pin 16
+
 
 
 #define STEP_PIN_UP_DOWN 60
@@ -124,7 +126,14 @@ void go_to_the_pin_n(int pin_num) { // передаётся номер пина,
   if (pin_now < pin_num) {
     stepper_round_change_pin(pin_num - pin_now);
   } else {
-    stepper_round_change_pin((pin_in_total - pin_num) + pin_now);
+    while (true) { // снова ноходим home
+    bool ans_from_optical_sensor = get_value_from_optical_sensor_for_home();
+    if (ans_from_optical_sensor) {
+      break;
+    }
+    stepper_round_move_once();
+   }
+   stepper_round_change_pin(pin_num - 1);
   }
   pin_now = pin_num;
 }
@@ -193,6 +202,7 @@ void move_up_while_max_pressure() { // движение вверх до дост
     stepper_up_down_move_once();
     ans = get_scales_value();
   }
+  digitalWrite(FiveV_pin, !digitalRead(FiveV_pin));
   delayMicroseconds(500);
 }
 
@@ -224,12 +234,15 @@ void press_pin_number(int n) { // передаётся номер пина, ин
 }
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
+  Serial.setTimeout(1);
   
   // --------------------- Весы --------------------------
   delay(500); // это время на то чтобы датчик весов очнулся
   scales.tare(); // калибровка нуля весов
  // ------------------------------------------------------
+
+ pinMode(FiveV_pin, OUTPUT); // делайем, пин для пяти вольтового разряда
  init_stepper_round();
  init_optical_sensor_for_go_home();
  init_stepper_up_down();
@@ -240,24 +253,8 @@ void setup() {
 
 
 void loop() {
-//  if (flag_setting_scales) { // выставление значения нуля весам
-//    set_up_zero_value_for_scales();
-//    move_down_maximal(); // возвращяем макимально вниз шаговик для up_down движений
-//    go_to_the_home_position(); // идём на начальную позицию с пином номер 1
-//  }
-  press_pin_number(5);
+  while (!Serial.available());
+  int x = Serial.readString().toInt();
+  press_pin_number(x);
 }
-
-//void loop() {
-//  int count = 0;
-//  while (true) { // снова ноходим home
-//    bool ans_from_optical_sensor = get_value_from_optical_sensor_for_home();
-//    if (ans_from_optical_sensor) {
-//      break;
-//    }
-//    stepper_round_move_once();
-//    count++;
-//    Serial.println(count);
-//  }
-//}
 
