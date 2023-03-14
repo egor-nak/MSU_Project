@@ -33,12 +33,12 @@ GyverHX711 scales(PIN_FIRST_SCALES, PIN_SECOND_SCALES, HX_GAIN64_A); // объя
 
 
 
-const int total_count_of_pins = 10;
 const double max_pressure_value = 100.0;
 bool flag_setting_scales = true; // Флаг выставление нужно ли выставить ноль на весах
 double zero_scales_value = 0.0; // Значение нуля весов
 
 int pin_now = 1; // на каком пине сейчас находится барабан
+int pin_in_total = 25;
 
 
 
@@ -112,15 +112,24 @@ void stepper_round_change_pin(int pins_count) { // сдвинуться на n -
     stepper_round_move_once();
     count_moves++;
     if (count_moves % 662 == 0) { // именно 662, я просто поситал, сколько ему нужно шагов, чтобы сместиться на один пин
-      pin_now++;
-      pin_now = pin_now % (total_count_of_pins + 1); // меняем индекс пина на котором стоит барабан
-      if (pin_now == 0) pin_now++;
       count_moves = 0;
       count_pins_skiped++;
     }
   }
 //  Serial.println("st");
 }
+
+void go_to_the_pin_n(int pin_num) { // передаётся номер пина, индексация идёт с 1
+  if (pin_num > pin_in_total || pin_num == pin_now) return ;
+  if (pin_now < pin_num) {
+    stepper_round_change_pin(pin_num - pin_now);
+  } else {
+    stepper_round_change_pin((pin_in_total - pin_num) + pin_now);
+  }
+  pin_now = pin_num;
+}
+
+ 
 
 
 void go_to_the_home_position() {
@@ -146,7 +155,7 @@ void go_to_the_home_position() {
     stepper_round_move_once();
   }
 
-  for (int i = 0; i < 7; ++i) { // это просто кастыль, чтобы он выставил ноль абсолютно точно
+  for (int i = 0; i < 7; ++i) { // это просто костыль, чтобы он выставил ноль абсолютно точно
     stepper_round_move_once();
   }
 }
@@ -209,6 +218,11 @@ void stepper_up_down_press() { // функция выталкиевает пин
 
 // -------------------------------------------------------------------------
 
+void press_pin_number(int n) { // передаётся номер пина, индексация идёт с 1
+  go_to_the_pin_n(n);
+  stepper_up_down_press();
+}
+
 void setup() {
   Serial.begin(9600);
   
@@ -219,20 +233,19 @@ void setup() {
  init_stepper_round();
  init_optical_sensor_for_go_home();
  init_stepper_up_down();
-
- 
- 
+ set_up_zero_value_for_scales();
+ move_down_maximal(); // возвращяем макимально вниз шаговик для up_down движений
+ go_to_the_home_position(); // идём на начальную позицию с пином номер 1
 }
 
 
 void loop() {
-  if (flag_setting_scales) { // выставление значения нуля весам
-    set_up_zero_value_for_scales();
-    move_down_maximal(); // возвращяем макимально вниз шаговик для up_down движений
-    go_to_the_home_position(); // идём на начальную позицию с пином номер 1
-  }
-  stepper_round_change_pin(1);
-  stepper_up_down_press();
+//  if (flag_setting_scales) { // выставление значения нуля весам
+//    set_up_zero_value_for_scales();
+//    move_down_maximal(); // возвращяем макимально вниз шаговик для up_down движений
+//    go_to_the_home_position(); // идём на начальную позицию с пином номер 1
+//  }
+  press_pin_number(5);
 }
 
 //void loop() {
@@ -247,3 +260,4 @@ void loop() {
 //    Serial.println(count);
 //  }
 //}
+
