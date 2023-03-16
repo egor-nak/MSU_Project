@@ -18,13 +18,24 @@ import serial
 
 SCREEN_SIZE = [1000, 700]
 
-sz_to_num = {"0.2": 1,
+sz_to_num = {"0.75": 1,
              "0.5": 2,
-             "0.7": 3}
+             "1.0": 3,
+             "1.25": 4,
+             "1.5": 5,
+             "1.75": 6,
+             "2.5": 7,
+             "3.0": 8
+             }
 num_to_ans = {
-    1: "parallel",
+    1: "perpendicular",
     2: "perpendicular",
-    3: "parallel"
+    3: "parallel",
+    4: "parallel",
+    5: "perpendicular",
+    6:  "parallel",
+    7: "parallel",
+    8: "parallel"
 }
 arduino_port = '/dev/tty.usbserial-1410'
 arduino = serial.Serial(port=arduino_port, baudrate=115200, timeout=.1)
@@ -34,6 +45,7 @@ class main_window(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.add_125_pin_title = None
         self.patient_now_answer = None  # ответ пациента в данный момент
         self.pin_nm = 0
         self.was_sent_first_flag = False
@@ -48,12 +60,12 @@ class main_window(QWidget):
         self.force_of_preassure = None
         self.save_protocole_btn = None
         self.delete_last_elem_from_sequence_btn = None
-        self.add_07_pin_title = None
-        self.add_07_pin_btn = None
+        self.add_1_pin_title = None
+        self.add_1_pin_btn = None
         self.add_05_pin_title = None
         self.add_05_pin_btn = None
-        self.add_02_pin_title = None
-        self.add_02_pin_btn = None
+        self.add_075_pin_title = None
+        self.add_075_pin_btn = None
         self.stairs_algorithm_status = None
         self.sequence_of_pins = None
         self.sequence_of_pins_title = None
@@ -209,7 +221,7 @@ class main_window(QWidget):
         font_for_stairs_algorithm_status = QtGui.QFont('Tahoma', 24)
         self.stairs_algorithm_status = QCheckBox(self)
         self.stairs_algorithm_status.setFont(font_for_stairs_algorithm_status)
-        self.stairs_algorithm_status.setText("Использовать алгоритм Лесенки")
+        self.stairs_algorithm_status.setText("Использовать алгоритм лесенки")
         self.stairs_algorithm_status.move(self.sequence_of_pins.pos().x() + self.sequence_of_pins.size().width() + 70,
                                           self.sequence_of_pins.pos().y())
         self.stairs_algorithm_status.show()
@@ -242,22 +254,22 @@ class main_window(QWidget):
 
         font_for_plus_buttons_and_titles = QtGui.QFont('Tahoma', 24)
 
-        # Setting 0.2 Button
+        # Setting 0.75 Button
 
-        self.add_02_pin_btn = QPushButton(self)
-        self.add_02_pin_btn.setText("+")
-        self.add_02_pin_btn.setFont(font_for_plus_buttons_and_titles)
-        self.add_02_pin_btn.resize(39, 32)
-        self.add_02_pin_btn.move(self.sequence_of_pins_title.pos().x() - 5, self.sequence_of_pins_title.pos().y() + 50)
-        self.add_02_pin_btn.clicked.connect(self.add_02_elem_into_secuence)
-        self.add_02_pin_btn.show()
+        self.add_075_pin_btn = QPushButton(self)
+        self.add_075_pin_btn.setText("+")
+        self.add_075_pin_btn.setFont(font_for_plus_buttons_and_titles)
+        self.add_075_pin_btn.resize(39, 32)
+        self.add_075_pin_btn.move(self.sequence_of_pins_title.pos().x() - 5, self.sequence_of_pins_title.pos().y() + 50)
+        self.add_075_pin_btn.clicked.connect(self.add_075_elem_into_secuence)
+        self.add_075_pin_btn.show()
 
-        self.add_02_pin_title = QLabel(self)
-        self.add_02_pin_title.setFont(font_for_plus_buttons_and_titles)
-        self.add_02_pin_title.move(self.add_02_pin_btn.pos().x() + self.add_02_pin_btn.size().width() + 10,
-                                   self.add_02_pin_btn.pos().y())
-        self.add_02_pin_title.setText("0.2 мм")
-        self.add_02_pin_title.show()
+        self.add_075_pin_title = QLabel(self)
+        self.add_075_pin_title.setFont(font_for_plus_buttons_and_titles)
+        self.add_075_pin_title.move(self.add_075_pin_btn.pos().x() + self.add_075_pin_btn.size().width() + 10,
+                                   self.add_075_pin_btn.pos().y())
+        self.add_075_pin_title.setText("0.75 мм")
+        self.add_075_pin_title.show()
 
         # Setting 0.5 Button
 
@@ -265,7 +277,7 @@ class main_window(QWidget):
         self.add_05_pin_btn.setText("+")
         self.add_05_pin_btn.setFont(font_for_plus_buttons_and_titles)
         self.add_05_pin_btn.resize(39, 32)
-        self.add_05_pin_btn.move(self.add_02_pin_btn.pos().x(), self.add_02_pin_btn.pos().y() + 50)
+        self.add_05_pin_btn.move(self.add_075_pin_btn.pos().x(), self.add_075_pin_btn.pos().y() + 50)
         self.add_05_pin_btn.clicked.connect(self.add_05_elem_into_secuence)
         self.add_05_pin_btn.show()
 
@@ -276,22 +288,108 @@ class main_window(QWidget):
         self.add_05_pin_title.setText("0.5 мм")
         self.add_05_pin_title.show()
 
-        # Setting 0.7 Button
+        # Setting 1.0 Button
 
-        self.add_07_pin_btn = QPushButton(self)
-        self.add_07_pin_btn.setText("+")
-        self.add_07_pin_btn.setFont(font_for_plus_buttons_and_titles)
-        self.add_07_pin_btn.resize(39, 32)
-        self.add_07_pin_btn.move(self.add_05_pin_btn.pos().x(), self.add_05_pin_btn.pos().y() + 50)
-        self.add_07_pin_btn.clicked.connect(self.add_07_elem_into_secuence)
-        self.add_07_pin_btn.show()
+        self.add_1_pin_btn = QPushButton(self)
+        self.add_1_pin_btn.setText("+")
+        self.add_1_pin_btn.setFont(font_for_plus_buttons_and_titles)
+        self.add_1_pin_btn.resize(39, 32)
+        self.add_1_pin_btn.move(self.add_05_pin_btn.pos().x(), self.add_05_pin_btn.pos().y() + 50)
+        self.add_1_pin_btn.clicked.connect(self.add_1_elem_into_secuence)
+        self.add_1_pin_btn.show()
 
-        self.add_07_pin_title = QLabel(self)
-        self.add_07_pin_title.setFont(font_for_plus_buttons_and_titles)
-        self.add_07_pin_title.move(self.add_07_pin_btn.pos().x() + self.add_07_pin_btn.size().width() + 10,
-                                   self.add_07_pin_btn.pos().y())
-        self.add_07_pin_title.setText("0.7 мм \n и.т.д")
-        self.add_07_pin_title.show()
+        self.add_1_pin_title = QLabel(self)
+        self.add_1_pin_title.setFont(font_for_plus_buttons_and_titles)
+        self.add_1_pin_title.move(self.add_1_pin_btn.pos().x() + self.add_1_pin_btn.size().width() + 10,
+                                   self.add_1_pin_btn.pos().y())
+        self.add_1_pin_title.setText("1.0 мм")
+        self.add_1_pin_title.show()
+
+        # Setting 1.25 Button
+
+        self.add_125_pin_btn = QPushButton(self)
+        self.add_125_pin_btn.setText("+")
+        self.add_125_pin_btn.setFont(font_for_plus_buttons_and_titles)
+        self.add_125_pin_btn.resize(39, 32)
+        self.add_125_pin_btn.move(self.add_1_pin_btn.pos().x(), self.add_1_pin_btn.pos().y() + 50)
+        self.add_125_pin_btn.clicked.connect(self.add_125_elem_into_secuence)
+        self.add_125_pin_btn.show()
+
+        self.add_125_pin_title = QLabel(self)
+        self.add_125_pin_title.setFont(font_for_plus_buttons_and_titles)
+        self.add_125_pin_title.move(self.add_125_pin_btn.pos().x() + self.add_125_pin_btn.size().width() + 10,
+                                   self.add_125_pin_btn.pos().y())
+        self.add_125_pin_title.setText("1.25 мм")
+        self.add_125_pin_title.show()
+
+        # Setting 1.5 Button
+
+        self.add_15_pin_btn = QPushButton(self)
+        self.add_15_pin_btn.setText("+")
+        self.add_15_pin_btn.setFont(font_for_plus_buttons_and_titles)
+        self.add_15_pin_btn.resize(39, 32)
+        self.add_15_pin_btn.move(self.add_125_pin_btn.pos().x(), self.add_125_pin_btn.pos().y() + 50)
+        self.add_15_pin_btn.clicked.connect(self.add_15_elem_into_secuence)
+        self.add_15_pin_btn.show()
+
+        self.add_15_pin_title = QLabel(self)
+        self.add_15_pin_title.setFont(font_for_plus_buttons_and_titles)
+        self.add_15_pin_title.move(self.add_15_pin_btn.pos().x() + self.add_15_pin_btn.size().width() + 10,
+                                    self.add_15_pin_btn.pos().y())
+        self.add_15_pin_title.setText("1.5 мм")
+        self.add_15_pin_title.show()
+
+        # Setting 1.75 Button
+
+        self.add_175_pin_btn = QPushButton(self)
+        self.add_175_pin_btn.setText("+")
+        self.add_175_pin_btn.setFont(font_for_plus_buttons_and_titles)
+        self.add_175_pin_btn.resize(39, 32)
+        self.add_175_pin_btn.move(self.add_15_pin_btn.pos().x(), self.add_15_pin_btn.pos().y() + 50)
+        self.add_175_pin_btn.clicked.connect(self.add_175_elem_into_secuence)
+        self.add_175_pin_btn.show()
+
+        self.add_175_pin_title = QLabel(self)
+        self.add_175_pin_title.setFont(font_for_plus_buttons_and_titles)
+        self.add_175_pin_title.move(self.add_175_pin_btn.pos().x() + self.add_175_pin_btn.size().width() + 10,
+                                   self.add_175_pin_btn.pos().y())
+        self.add_175_pin_title.setText("1.75 мм")
+        self.add_175_pin_title.show()
+
+
+        # Setting 2.5 Button
+
+        self.add_25_pin_btn = QPushButton(self)
+        self.add_25_pin_btn.setText("+")
+        self.add_25_pin_btn.setFont(font_for_plus_buttons_and_titles)
+        self.add_25_pin_btn.resize(39, 32)
+        self.add_25_pin_btn.move(self.add_175_pin_btn.pos().x(), self.add_175_pin_btn.pos().y() + 50)
+        self.add_25_pin_btn.clicked.connect(self.add_25_elem_into_secuence)
+        self.add_25_pin_btn.show()
+
+        self.add_25_pin_title = QLabel(self)
+        self.add_25_pin_title.setFont(font_for_plus_buttons_and_titles)
+        self.add_25_pin_title.move(self.add_25_pin_btn.pos().x() + self.add_25_pin_btn.size().width() + 10,
+                                   self.add_25_pin_btn.pos().y())
+        self.add_25_pin_title.setText("2.5 мм")
+        self.add_25_pin_title.show()
+
+        # Setting 3.0 Button
+
+        self.add_3_pin_btn = QPushButton(self)
+        self.add_3_pin_btn.setText("+")
+        self.add_3_pin_btn.setFont(font_for_plus_buttons_and_titles)
+        self.add_3_pin_btn.resize(39, 32)
+        self.add_3_pin_btn.move(self.add_25_pin_btn.pos().x(), self.add_25_pin_btn.pos().y() + 50)
+        self.add_3_pin_btn.clicked.connect(self.add_3_elem_into_secuence)
+        self.add_3_pin_btn.show()
+
+        self.add_3_pin_title = QLabel(self)
+        self.add_3_pin_title.setFont(font_for_plus_buttons_and_titles)
+        self.add_3_pin_title.move(self.add_3_pin_btn.pos().x() + self.add_3_pin_btn.size().width() + 10,
+                                   self.add_3_pin_btn.pos().y())
+        self.add_3_pin_title.setText("3.0 мм")
+        self.add_3_pin_title.show()
 
     def testing_patient_window(self):
         self.hide_objects_from_protocol_settings_page()
@@ -414,16 +512,39 @@ class main_window(QWidget):
         if self.pin_nm == len(self.sequence_of_pins_that_goes_to_arduino):
             self.final_result_window()
 
-    def add_02_elem_into_secuence(self):
-        self.sequence_of_pins_that_goes_to_arduino.append("0.2")
+    def add_075_elem_into_secuence(self):
+        self.sequence_of_pins_that_goes_to_arduino.append("0.75")
         self.sequence_of_pins.setText("; ".join(self.sequence_of_pins_that_goes_to_arduino))
 
     def add_05_elem_into_secuence(self):
         self.sequence_of_pins_that_goes_to_arduino.append("0.5")
         self.sequence_of_pins.setText("; ".join(self.sequence_of_pins_that_goes_to_arduino))
 
-    def add_07_elem_into_secuence(self):
-        self.sequence_of_pins_that_goes_to_arduino.append("0.7")
+    def add_1_elem_into_secuence(self):
+        self.sequence_of_pins_that_goes_to_arduino.append("1.0")
+        self.sequence_of_pins.setText("; ".join(self.sequence_of_pins_that_goes_to_arduino))
+
+
+
+    def add_125_elem_into_secuence(self):
+        self.sequence_of_pins_that_goes_to_arduino.append("1.25")
+        self.sequence_of_pins.setText("; ".join(self.sequence_of_pins_that_goes_to_arduino))
+
+    def add_15_elem_into_secuence(self):
+        self.sequence_of_pins_that_goes_to_arduino.append("1.5")
+        self.sequence_of_pins.setText("; ".join(self.sequence_of_pins_that_goes_to_arduino))
+
+
+    def add_175_elem_into_secuence(self):
+        self.sequence_of_pins_that_goes_to_arduino.append("1.75")
+        self.sequence_of_pins.setText("; ".join(self.sequence_of_pins_that_goes_to_arduino))
+
+    def add_25_elem_into_secuence(self):
+        self.sequence_of_pins_that_goes_to_arduino.append("2.5")
+        self.sequence_of_pins.setText("; ".join(self.sequence_of_pins_that_goes_to_arduino))
+
+    def add_3_elem_into_secuence(self):
+        self.sequence_of_pins_that_goes_to_arduino.append("3.0")
         self.sequence_of_pins.setText("; ".join(self.sequence_of_pins_that_goes_to_arduino))
 
     def delete_last_elem_from_sequence(self):
@@ -441,24 +562,28 @@ class main_window(QWidget):
             item.show()
 
     def hide_objects_from_protocol_settings_page(self):
-        for item in [self.save_protocole_btn, self.delete_last_elem_from_sequence_btn, self.add_07_pin_title,
-                     self.add_07_pin_btn, self.add_05_pin_title,
-                     self.add_05_pin_btn, self.add_02_pin_title,
-                     self.add_02_pin_btn, self.stairs_algorithm_status,
+        for item in [self.save_protocole_btn, self.delete_last_elem_from_sequence_btn, self.add_1_pin_title,
+                     self.add_1_pin_btn, self.add_05_pin_title,
+                     self.add_05_pin_btn, self.add_075_pin_title,
+                     self.add_075_pin_btn, self.stairs_algorithm_status,
                      self.sequence_of_pins, self.sequence_of_pins_title,
                      self.input_name_patient, self.name_patient, self.testing_protocole_title,
-                     self.input_force_of_preassure, self.force_of_preassure]:
+                     self.input_force_of_preassure, self.force_of_preassure, self.add_125_pin_title,
+                     self.add_125_pin_btn, self.add_15_pin_title, self.add_15_pin_btn,
+                     self.add_175_pin_title, self.add_175_pin_btn,
+                     self.add_25_pin_title, self.add_25_pin_btn,
+                     self.add_3_pin_title, self.add_3_pin_btn]:
             item.hide()
 
-    def show_objects_from_protocol_settings_page(self):
-        for item in [self.save_protocole_btn, self.delete_last_elem_from_sequence_btn, self.add_07_pin_title,
-                     self.add_07_pin_btn, self.add_05_pin_title,
-                     self.add_05_pin_btn, self.add_02_pin_title,
-                     self.add_02_pin_btn, self.stairs_algorithm_status,
-                     self.sequence_of_pins, self.sequence_of_pins_title,
-                     self.input_name_patient, self.name_patient, self.testing_protocole_title,
-                     self.input_force_of_preassure, self.force_of_preassure]:
-            item.show()
+    # def show_objects_from_protocol_settings_page(self):
+    #     for item in [self.save_protocole_btn, self.delete_last_elem_from_sequence_btn, self.add_07_pin_title,
+    #                  self.add_07_pin_btn, self.add_05_pin_title,
+    #                  self.add_05_pin_btn, self.add_02_pin_title,
+    #                  self.add_02_pin_btn, self.stairs_algorithm_status,
+    #                  self.sequence_of_pins, self.sequence_of_pins_title,
+    #                  self.input_name_patient, self.name_patient, self.testing_protocole_title,
+    #                  self.input_force_of_preassure, self.force_of_preassure]:
+    #         item.show()
 
     def hide_objects_from_testing_page(self):
         for item in [self.parallel_button, self.perpendicular_button, self.iteration_count]:
