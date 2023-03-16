@@ -246,15 +246,19 @@ void setup() {
  init_stepper_round();
  init_optical_sensor_for_go_home();
  init_stepper_up_down();
- set_up_zero_value_for_scales();
- move_down_maximal(); // возвращяем макимально вниз шаговик для up_down движений
- go_to_the_home_position(); // идём на начальную позицию с пином номер 1
+// set_up_zero_value_for_scales();
+// move_down_maximal(); // возвращяем макимально вниз шаговик для up_down движений
+// go_to_the_home_position(); // идём на начальную позицию с пином номер 1
 }
 
 
 void loop() {
+  if (flag_setting_scales) { // выставление значения нуля весам
+     set_up_zero_value_for_scales();
+     move_down_maximal(); // возвращяем макимально вниз шаговик для up_down движений
+     go_to_the_home_position(); // идём на начальную позицию с пином номер 1
+   }
   while (!Serial.available());
   int x = Serial.readString().toInt();
   press_pin_number(x);
 }
-
